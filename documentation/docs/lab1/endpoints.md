@@ -1,17 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import select, Session
-from typing import List
-from models.models import User, UserDefault, UserCreate, UserRead, Account, Budget, Transaction, Transfer, ChangePassword
-from auth.connection import get_session
-from auth.jwt_utils import get_password_hash, verify_password, create_jwt_token
-from datetime import timedelta
-from auth.auth import bearer_scheme
+## users
 
-from auth.auth import get_current_user
+![users](img/users_end.png)
 
-router = APIRouter(prefix="/users", tags=["Users"])
-
-
+- регистрация
+```python
 @router.post("/register", response_model=UserRead)
 def register(user: UserCreate, session: Session = Depends(get_session)):
     db_user = session.exec(select(User).where(User.email == user.email)).first()
@@ -24,7 +16,9 @@ def register(user: UserCreate, session: Session = Depends(get_session)):
     session.commit()
     session.refresh(new_user)
     return new_user
-
+```
+- вход
+```python
 @router.post("/login")
 def login(user: UserCreate, session: Session = Depends(get_session)):
     db_user = session.exec(select(User).where(User.email == user.email)).first()
@@ -34,28 +28,34 @@ def login(user: UserCreate, session: Session = Depends(get_session)):
 
     access_token = create_jwt_token(data={"sub": str(db_user.id)}, expires_delta=timedelta(minutes=30))
     return {"access_token": access_token, "token_type": "bearer"}
-
+```
+- смена пароля
+```python
 @router.post("/change-password", dependencies=[Depends(bearer_scheme)])
 def change_password(
     request: ChangePassword,
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
-    # Проверка старого пароля
+    # проверка старого пароля
     if not verify_password(request.old_password, current_user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect old password")
 
-    # Смена на новый (с хэшированием)
+    # cмена на новый пароль
     current_user.hashed_password = get_password_hash(request.new_password)
     session.add(current_user)
     session.commit()
 
     return {"message": "Password changed successfully"}
-
+```
+- список пользователей
+```python
 @router.get("/")
 def users_list(session=Depends(get_session)) -> List[User]:
     return session.exec(select(User)).all()
-
+```
+- редактирование информации пользователя
+```python
 @router.patch("/{user_id}", response_model=User)
 def update_user(user_id: int, user: UserDefault, session: Session = Depends(get_session)):
     db_user = session.get(User, user_id)
@@ -67,7 +67,9 @@ def update_user(user_id: int, user: UserDefault, session: Session = Depends(get_
     session.commit()
     session.refresh(db_user)
     return db_user
-
+```
+- удаление пользователя
+```python
 @router.delete("/{user_id}")
 def delete_user(user_id: int, session: Session = Depends(get_session)):
     user = session.get(User, user_id)
@@ -90,7 +92,9 @@ def delete_user(user_id: int, session: Session = Depends(get_session)):
     session.delete(user)
     session.commit()
     return {"ok": True}
-
+```
+- список пользователей с их счетами (вложенный запрос)
+```python
 @router.get("/users-with-accounts")
 def get_users_with_accounts(session: Session = Depends(get_session)):
     users = session.exec(select(User)).all()
@@ -115,3 +119,64 @@ def get_users_with_accounts(session: Session = Depends(get_session)):
         })
 
     return result
+```
+
+## accounts
+
+![accounts](img/accounts_end.png)
+
+- список счетов
+- добавление нового счета
+- удаление счета
+
+## budgets
+
+![budgets](img/budgets_end.png)
+
+- список бюджетов
+- установить бюджет на месяц
+
+## transactions
+
+![transactions](img/transactions_end.png)
+
+- список транзакций
+- транзакция
+
+## transfers
+
+![transfers](img/transfers_end.png)
+
+- список переводов
+```python
+@router.get("/", response_model=List[Transfer])
+def list_transfers(session: Session = Depends(get_session)):
+    return session.exec(select(Transfer)).all()
+```
+- перевод
+```python
+@router.post("/", response_model=Transfer)
+def create_transfer(transfer: TransferDefault, session: Session = Depends(get_session)):
+    if transfer.from_account_id == transfer.to_account_id:
+        raise HTTPException(status_code=400, detail="Cannot transfer to the same account")
+
+    from_account = session.get(Account, transfer.from_account_id)
+    to_account = session.get(Account, transfer.to_account_id)
+
+    if not from_account or not to_account:
+        raise HTTPException(status_code=404, detail="Account not found")
+
+    if from_account.balance < transfer.amount:
+        raise HTTPException(status_code=400, detail="Insufficient funds in source account")
+
+    from_account.balance -= transfer.amount
+    to_account.balance += transfer.amount
+
+    transfer = Transfer.model_validate(transfer)
+    session.add(transfer)
+    session.add(from_account)
+    session.add(to_account)
+    session.commit()
+    session.refresh(transfer)
+    return transfer
+```

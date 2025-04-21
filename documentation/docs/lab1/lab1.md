@@ -1,22 +1,13 @@
-from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional, List
-from enum import Enum
-from datetime import datetime
-from pydantic import BaseModel
-from pydantic import EmailStr
+# Разработка сервиса для управления личными финансами
 
-# ENUM
+## Текст задания
 
-class CategoryType(str, Enum):
-    food = "food"
-    transport = "transport"
-    salary = "salary"
-    entertainment = "entertainment"
-    health = "health"
-    other = "other"
+Необходиом создать простой сервис для управления личными финансами. Сервис должен позволять пользователям вводить доходы и расходы, устанавливать бюджеты на различные категории, а также просматривать отчеты о своих финансах. Дополнительные функции могут включать в себя возможность получения уведомлений о превышении бюджета, анализа трат и установки целей на будущее.
 
+## Models
 
-# USER 
+### User - пользователи
+```python
 class UserDefault(SQLModel):
     username: str
     email: EmailStr = Field(unique=True, index=True)
@@ -46,9 +37,9 @@ class User(UserDefault, table=True):
 class ChangePassword(BaseModel):
     old_password: str
     new_password: str
-
-
-# ACCOUNT 
+```
+### Account - счета
+```python
 class AccountBase(SQLModel):
     name: str
     balance: float
@@ -68,8 +59,9 @@ class AccountDefault(SQLModel):
     is_goal: bool = False
     balance: float = 0.0  
     target_amount: Optional[float] = None # цель (только если is_goal=True)
-
-# TRANSACTION 
+```
+### Transaction - транзакции
+```python
 class TransactionBase(SQLModel):
     amount: float
     description: str
@@ -88,9 +80,9 @@ class TransactionDefault(SQLModel):
     amount: float
     description: Optional[str]
     date: datetime
-
-
-# BUDGET 
+```
+### Budget - бюджеты
+```python
 class BudgetBase(SQLModel):
     month: int
     year: int
@@ -120,8 +112,9 @@ class BudgetStats(BaseModel):
     limit: float
     spent: float
     remaining: float
-
-# TRANSFER 
+```
+### Transfer - переводы между своими счетами
+```python
 class TransferBase(SQLModel):
     amount: float
     date: datetime
@@ -138,3 +131,4 @@ class TransferDefault(SQLModel):
     to_account_id: int
     amount: float
     date: datetime
+```

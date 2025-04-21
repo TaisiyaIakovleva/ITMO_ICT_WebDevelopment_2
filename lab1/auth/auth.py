@@ -8,12 +8,10 @@ from auth.connection import get_session
 from fastapi import Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-# Класс кастомного Bearer токена
 class CustomBearer(HTTPBearer):
     async def __call__(self, request: Request) -> HTTPAuthorizationCredentials:
         return await super().__call__(request)
 
-# Экземпляр, который можно использовать в Depends
 bearer_scheme = CustomBearer()
 
 async def get_current_user(request: Request, session: Session = Depends(get_session)) -> User:
