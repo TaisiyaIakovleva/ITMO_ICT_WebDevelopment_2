@@ -605,6 +605,24 @@ def get_users_with_accounts(session: Session = Depends(get_session)):
 
     return result
 </code></pre>
+<ul>
+<li>список пользователей с их бюджетами (вложенный запрос, many-to-many)</li>
+</ul>
+<pre><code class="language-python">@router.get(&quot;/users-with-budgets&quot;)
+def get_users_with_budgets(session: Session = Depends(get_session)):
+    users = session.exec(select(User)).all()
+    result = []
+
+    for user in users:
+        budgets = [{&quot;id&quot;: b.id, &quot;category&quot;: b.category, &quot;month&quot;: b.month, &quot;year&quot;: b.year, &quot;limit&quot;: b.limit} for b in user.shared_budgets]
+        result.append({
+            &quot;user_id&quot;: user.id,
+            &quot;username&quot;: user.username,
+            &quot;budgets&quot;: budgets
+        })
+
+    return result
+</code></pre>
 <h2 id="accounts">accounts</h2>
 <p><img alt="accounts" src="../img/accounts_end.png" /></p>
 <ul>

@@ -566,6 +566,11 @@ class User(UserDefault, table=True):
 class ChangePassword(BaseModel):
     old_password: str
     new_password: str
+
+
+class UserBudgetLink(SQLModel, table=True):
+    user_id: int = Field(foreign_key=&quot;user.id&quot;, primary_key=True)
+    budget_id: int = Field(foreign_key=&quot;budget.id&quot;, primary_key=True)
 </code></pre>
 <h3 id="account-">Account - счета</h3>
 <pre><code class="language-python">class AccountBase(SQLModel):
@@ -615,23 +620,21 @@ class TransactionDefault(SQLModel):
     limit: float
     category: CategoryType
 
-
 class Budget(BudgetBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key=&quot;user.id&quot;)
-    user: Optional[User] = Relationship(back_populates=&quot;budgets&quot;)
-
+    users: List[&quot;User&quot;] = Relationship(back_populates=&quot;shared_budgets&quot;, link_model=UserBudgetLink)
 
 class BudgetDefault(SQLModel):
-    user_id: int
+    # user_id: int
     category: CategoryType
     month: int
     year: int
     limit: float
+    user_ids: List[int]
 
 class BudgetStats(BaseModel):
     id: int
-    user_id: int
+    users: List[int]
     category: CategoryType
     month: int
     year: int
