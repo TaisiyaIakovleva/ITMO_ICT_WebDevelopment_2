@@ -551,10 +551,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Подзадача 3: Вызов парсера через очередь (Celery + Redis)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Описание функциональности
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Запуск
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       Результаты
     </span>
@@ -662,10 +686,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Подзадача 3: Вызов парсера через очередь (Celery + Redis)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Описание функциональности
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Запуск
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       Результаты
     </span>
@@ -699,7 +747,8 @@
 <li><strong>Celery</strong> — асинхронная очередь задач</li>
 <li><strong>Redis</strong> — брокер сообщений для Celery</li>
 <li><strong>PostgreSQL</strong> — СУБД</li>
-<li><strong>Python 3.10</strong></li>
+<li><strong>Python</strong></li>
+<li><strong>BeautifulSoup / Requests</strong></li>
 </ul>
 <h2 id="1-docker">Подзадача 1: Упаковка в Docker</h2>
 <p>Созданы два основных сервиса:
@@ -719,36 +768,41 @@ COPY app/ .
 CMD [&quot;uvicorn&quot;, &quot;main:app&quot;, &quot;--host&quot;, &quot;0.0.0.0&quot;, &quot;--port&quot;, &quot;8000&quot;]
 </code></pre>
 <h3 id="docker-composeyml">docker-compose.yml</h3>
-<pre><code class="language-yml">version: '3.9'
+<pre><code class="language-yml">vversion: &quot;3.9&quot;
 
 services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: finance
+    ports:
+      - &quot;5432:5432&quot;
+
+  redis:
+    image: redis:alpine
+    ports:
+      - &quot;6379:6379&quot;
+
   web:
     build: .
+    depends_on:
+      - db
+      - redis
     ports:
       - &quot;8000:8000&quot;
-    depends_on:
-      - redis
-      - db
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db/finance
+    volumes:
+      - ./app:/app
 
   worker:
     build: .
     command: celery -A tasks worker --loglevel=info
     depends_on:
       - redis
-
-  redis:
-    image: redis:latest
-    ports:
-      - &quot;6379:6379&quot;
-
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
-      POSTGRES_DB: mydb
-    ports:
-      - &quot;5432:5432&quot;
+      - db
 </code></pre>
 <h2 id="2-http">Подзадача 2: Вызов парсера через HTTP</h2>
 <p>Добавлен эндпоинт /parse в main.py:</p>
@@ -770,14 +824,50 @@ def parse_async(request: ParseRequest):
     task = async_parse.delay(request.url)
     return {&quot;task_id&quot;: task.id}
 </code></pre>
-<h2 id="_2">Результаты</h2>
+<h3 id="_2">Описание функциональности</h3>
+<p>FastAPI API</p>
+<ul>
+<li>POST /parse?url=...</li>
+</ul>
+<p>Кидает задачу парсинга в очередь Celery</p>
+<ul>
+<li>GET /result/{task_id}</li>
+</ul>
+<p>Проверка статуса задачи и возврат результата</p>
+<ul>
+<li>GET /pages</li>
+</ul>
+<p>Получение всех ранее распарсенных страниц из БД</p>
+<p>Celery обрабатывает задачи парсинга страниц.
+Redis используется как брокер и хранилище результатов.
+Повторные попытки реализованы через retry в Celery.</p>
+<h2 id="_3">Запуск</h2>
+<ul>
+<li>
+<p>Установлен Docker</p>
+</li>
+<li>
+<p>Выполнить <code>docker-compose up --build</code></p>
+</li>
+<li>
+<p>Приложение будет доступно по адресу: <a href="http://localhost:8000/docs">http://localhost:8000/docs</a></p>
+</li>
+</ul>
+<p>Пример запроса</p>
+<p>Отправка URL на парсинг:</p>
+<p><img alt="parser" src="../img/parser.png" /></p>
+<p>POST /parse?url=https://www.imdb.com</p>
+<p>Проверка результата:</p>
+<p><img alt="result_task_id" src="../img/result_task_id.png" /></p>
+<p>Записи в бд:</p>
+<p><img alt="pages" src="../img/pages.png" /></p>
+<h2 id="_4">Результаты</h2>
 <ul>
 <li>Успешно упаковано FastAPI-приложение в Docker</li>
 <li>Реализован HTTP-вызов парсера</li>
 <li>Реализован асинхронный вызов парсера через Celery</li>
 <li>Использована PostgreSQL как хранилище</li>
 <li>Протестирована связка всех компонентов с помощью Docker Compose</li>
-<li>Swagger UI доступен по адресу: <a href="http://localhost:8000/docs">http://localhost:8000/docs</a></li>
 </ul>
 
 
