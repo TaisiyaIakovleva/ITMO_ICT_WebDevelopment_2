@@ -791,13 +791,19 @@
 <h2 id="1-threading-multiprocessing-async-python">Задача 1: Сравнение threading, multiprocessing и async в Python</h2>
 <h3 id="_1">Цель:</h3>
 <p>Исследовать различия между тремя подходами параллельных вычислений в Python — потоками, процессами и асинхронностью — на примере задачи суммирования чисел от 1 до 10 триллионов.</p>
-<hr />
 <h3 id="_2">Условие:</h3>
-<p>Каждая программа должна вычислять сумму чисел от 1 до 10_000_000_000, делая это параллельно с использованием:
-- <code>threading</code>
-- <code>multiprocessing</code>
-- <code>asyncio</code></p>
-<hr />
+<p>Каждая программа должна вычислять сумму чисел от 1 до 10_000_000_000, делая это параллельно с использованием:</p>
+<ul>
+<li>
+<p><code>threading</code></p>
+</li>
+<li>
+<p><code>multiprocessing</code></p>
+</li>
+<li>
+<p><code>asyncio</code></p>
+</li>
+</ul>
 <h3 id="_3">Реализация:</h3>
 <h4 id="threading_sumpy">Файл: <code>threading_sum.py</code></h4>
 <p>Используется модуль <code>threading</code>, создаются 4 потока, каждый считает свою часть суммы и записывает результат в общий список.</p>
@@ -834,6 +840,37 @@ if __name__ == &quot;__main__&quot;:
 </code></pre>
 <h4 id="multiprocessing_sumpy">Файл: <code>multiprocessing_sum.py</code></h4>
 <p>Используется модуль multiprocessing. Каждый процесс отправляет свой результат в очередь multiprocessing.Queue, откуда они собираются в основном процессе.</p>
+<pre><code class="language-python">import multiprocessing
+import time
+
+def calculate_sum(start, end, queue):
+    queue.put(sum(range(start, end + 1)))
+
+def main():
+    N = 10_000_000_000
+    NUM_PROCESSES = 4
+    step = N // NUM_PROCESSES
+    queue = multiprocessing.Queue()
+    processes = []
+
+    t0 = time.time()
+    for i in range(NUM_PROCESSES):
+        start_range = i * step + 1
+        end_range = (i + 1) * step if i &lt; NUM_PROCESSES - 1 else N
+        p = multiprocessing.Process(target=calculate_sum, args=(start_range, end_range, queue))
+        processes.append(p)
+        p.start()
+
+    for p in processes:
+        p.join()
+
+    total = sum(queue.get() for _ in range(NUM_PROCESSES))
+    print(&quot;Multiprocessing result:&quot;, total)
+    print(&quot;Time:&quot;, time.time() - t0, &quot;seconds&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
 <h4 id="asyncio_sumpy">Файл: asyncio_sum.py</h4>
 <p>Асинхронная реализация. Используется asyncio.create_task() и await asyncio.gather(...) для параллельного запуска корутин, каждая из которых считает сумму своего диапазона.</p>
 <pre><code class="language-python">import asyncio
@@ -864,14 +901,14 @@ if __name__ == &quot;__main__&quot;:
 </code></pre>
 <h2 id="_4">Результаты измерений (примерные):</h2>
 <h3 id="asyncio_sumpy_1">asyncio_sum.py</h3>
-<p>Asyncio result: 50000000005000000000
-Time: 130.47408509254456 seconds</p>
+<p>Asyncio result: 50000000005000000000</p>
+<p>Time: 130.47408509254456 seconds</p>
 <h3 id="threading_sumpy_1">threading_sum.py</h3>
-<p>Threading result: 50000000005000000000
-Time: 132.37248992919922 seconds</p>
+<p>Threading result: 50000000005000000000</p>
+<p>Time: 132.37248992919922 seconds</p>
 <h3 id="multiprocessing_sumpy_1">multiprocessing_sum.py</h3>
-<p>Multiprocessing result: 50000000005000000000
-Time: 43.91871190071106 seconds</p>
+<p>Multiprocessing result: 50000000005000000000</p>
+<p>Time: 43.91871190071106 seconds</p>
 
 
 
