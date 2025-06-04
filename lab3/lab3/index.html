@@ -757,7 +757,7 @@ def parse_url(request: ParseRequest):
     title = parse_and_save(request.url)
     return {&quot;message&quot;: &quot;Parsed&quot;, &quot;title&quot;: title}
 </code></pre>
-<p>Парсер загружает содержимое страницы по URL и извлекает <title>. Данные сохраняются в БД.</p>
+<p>Парсер загружает содержимое страницы по URL и извлекает title. Данные сохраняются в БД.</p>
 <h2 id="3-celery-redis">Подзадача 3: Вызов парсера через очередь (Celery + Redis)</h2>
 <p>Определена асинхронная задача:</p>
 <pre><code class="language-python">@app.task
