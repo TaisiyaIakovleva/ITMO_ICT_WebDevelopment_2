@@ -41,11 +41,11 @@ def change_password(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
-    # Проверка старого пароля
+    # проверка старого пароля
     if not verify_password(request.old_password, current_user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect old password")
 
-    # Смена на новый (с хэшированием)
+    # cмена на новый пароль
     current_user.hashed_password = get_password_hash(request.new_password)
     session.add(current_user)
     session.commit()
@@ -112,6 +112,21 @@ def get_users_with_accounts(session: Session = Depends(get_session)):
                 }
                 for acc in user.accounts
             ]
+        })
+
+    return result
+
+@router.get("/users-with-budgets")
+def get_users_with_budgets(session: Session = Depends(get_session)):
+    users = session.exec(select(User)).all()
+    result = []
+
+    for user in users:
+        budgets = [{"id": b.id, "category": b.category, "month": b.month, "year": b.year, "limit": b.limit} for b in user.shared_budgets]
+        result.append({
+            "user_id": user.id,
+            "username": user.username,
+            "budgets": budgets
         })
 
     return result
