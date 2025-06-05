@@ -1,31 +1,3 @@
-# import threading
-# import time
-# from db import init_db, save_parsed_page
-# from urls import URLS
-# from common import get_title
-
-# def parse_and_save(url):
-#     title = get_title(url)
-#     save_parsed_page(url, title)
-#     print(f"[threading] {url} -> {title}")
-
-# def main():
-#     init_db()
-#     threads = []
-
-#     start = time.time()
-#     for url in URLS:
-#         t = threading.Thread(target=parse_and_save, args=(url,))
-#         threads.append(t)
-#         t.start()
-
-#     for t in threads:
-#         t.join()
-
-#     print("Threading done in", time.time() - start, "seconds")
-
-# if __name__ == "__main__":
-#     main()
 import threading, time, requests
 from bs4 import BeautifulSoup
 from models import ParsedPage

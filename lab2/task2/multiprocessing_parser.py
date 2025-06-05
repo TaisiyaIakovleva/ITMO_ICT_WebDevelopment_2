@@ -1,32 +1,3 @@
-# from multiprocessing import Process
-# import time
-# import asyncio
-# from db import init_db, save_parsed_page
-# from urls import URLS
-# from common import get_title
-
-# def parse_and_save(url):
-#     title = get_title(url)
-#     asyncio.run(save_parsed_page(url, title))
-#     print(f"[multiprocessing] {url} -> {title}")
-
-# def main():
-#     asyncio.run(init_db())
-#     processes = []
-
-#     start = time.time()
-#     for url in URLS:
-#         p = Process(target=parse_and_save, args=(url,))
-#         processes.append(p)
-#         p.start()
-
-#     for p in processes:
-#         p.join()
-
-#     print("Multiprocessing done in", time.time() - start, "seconds")
-
-# if __name__ == "__main__":
-#     main()
 from multiprocessing import Pool
 import requests, time
 from bs4 import BeautifulSoup
