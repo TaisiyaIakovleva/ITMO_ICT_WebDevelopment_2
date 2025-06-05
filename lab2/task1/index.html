@@ -482,11 +482,11 @@
         <li class="md-nav__item">
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
-      Результаты измерений (примерные):
+      Результаты измерений:
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Результаты измерений (примерные):">
+    <nav class="md-nav" aria-label="Результаты измерений:">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -732,11 +732,11 @@
         <li class="md-nav__item">
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
-      Результаты измерений (примерные):
+      Результаты измерений:
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Результаты измерений (примерные):">
+    <nav class="md-nav" aria-label="Результаты измерений:">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -833,7 +833,7 @@ def main():
 
     total = sum(results)
     print(&quot;Threading result:&quot;, total)
-    print(&quot;Elapsed time:&quot;, time.time() - t0, &quot;seconds&quot;)
+    print(&quot;Time:&quot;, time.time() - t0, &quot;seconds&quot;)
 
 if __name__ == &quot;__main__&quot;:
     main()
@@ -894,12 +894,12 @@ async def main():
     results = await asyncio.gather(*tasks)
     total = sum(results)
     print(&quot;Asyncio result:&quot;, total)
-    print(&quot;Elapsed time:&quot;, time.time() - t0, &quot;seconds&quot;)
+    print(&quot;Time:&quot;, time.time() - t0, &quot;seconds&quot;)
 
 if __name__ == &quot;__main__&quot;:
     asyncio.run(main())
 </code></pre>
-<h2 id="_4">Результаты измерений (примерные):</h2>
+<h2 id="_4">Результаты измерений:</h2>
 <h3 id="asyncio_sumpy_1">asyncio_sum.py</h3>
 <p>Asyncio result: 50000000005000000000</p>
 <p>Time: 130.47408509254456 seconds</p>
