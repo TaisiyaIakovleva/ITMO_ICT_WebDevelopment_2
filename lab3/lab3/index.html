@@ -513,9 +513,18 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#dockerfile" class="md-nav__link">
+  <a href="#dockerfileweb" class="md-nav__link">
     <span class="md-ellipsis">
-      Dockerfile
+      Dockerfile.web
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dockerfileworker" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dockerfile.worker
     </span>
   </a>
   
@@ -648,9 +657,18 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#dockerfile" class="md-nav__link">
+  <a href="#dockerfileweb" class="md-nav__link">
     <span class="md-ellipsis">
-      Dockerfile
+      Dockerfile.web
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dockerfileworker" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dockerfile.worker
     </span>
   </a>
   
@@ -757,15 +775,29 @@
 <p>Дополнительно:
 - <code>redis</code> — брокер задач
 - <code>db</code> — база данных PostgreSQL</p>
-<h3 id="dockerfile">Dockerfile</h3>
+<h3 id="dockerfileweb">Dockerfile.web</h3>
 <pre><code class="language-dockerfile">FROM python:3.10
 
 WORKDIR /app
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
 COPY app/ .
 
 CMD [&quot;uvicorn&quot;, &quot;main:app&quot;, &quot;--host&quot;, &quot;0.0.0.0&quot;, &quot;--port&quot;, &quot;8000&quot;]
+</code></pre>
+<h3 id="dockerfileworker">Dockerfile.worker</h3>
+<pre><code class="language-dockerfile">FROM python:3.10
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app/ .
+
+CMD [&quot;celery&quot;, &quot;-A&quot;, &quot;tasks&quot;, &quot;worker&quot;, &quot;--loglevel=info&quot;]
 </code></pre>
 <h3 id="docker-composeyml">docker-compose.yml</h3>
 <pre><code class="language-yml">vversion: &quot;3.9&quot;
