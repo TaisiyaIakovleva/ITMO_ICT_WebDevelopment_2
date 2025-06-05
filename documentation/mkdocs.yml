@@ -15,3 +15,5 @@ nav:
     - task2: lab2/task2.md
   - Lab3:
     - Lab 3: lab3/lab3.md
+  - Leetcodes:
+    - Leetcodes: leetcodes/leetcodes.md
