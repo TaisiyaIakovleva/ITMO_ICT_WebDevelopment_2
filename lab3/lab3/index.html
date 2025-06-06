@@ -588,15 +588,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      Результаты
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -800,15 +791,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      Результаты
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -855,7 +837,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app/ .
 
-CMD [&quot;uvicorn&quot;, &quot;main:app&quot;, &quot;--host&quot;, &quot;0.0.0.0&quot;, &quot;--port&quot;, &quot;8000&quot;]
+CMD [&quot;uvicorn&quot;, &quot;app.main:app&quot;, &quot;--host&quot;, &quot;0.0.0.0&quot;, &quot;--port&quot;, &quot;8000&quot;]
 </code></pre>
 <h3 id="dockerfileworker">Dockerfile.worker</h3>
 <pre><code class="language-dockerfile">FROM python:3.10
@@ -867,44 +849,58 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app/ .
 
-CMD [&quot;celery&quot;, &quot;-A&quot;, &quot;tasks&quot;, &quot;worker&quot;, &quot;--loglevel=info&quot;]
+CMD [&quot;uvicorn&quot;, &quot;app.main:app&quot;, &quot;--host&quot;, &quot;0.0.0.0&quot;, &quot;--port&quot;, &quot;8000&quot;]
 </code></pre>
 <h3 id="docker-composeyml">docker-compose.yml</h3>
-<pre><code class="language-yml">vversion: &quot;3.9&quot;
+<pre><code class="language-yml">version: &quot;3.9&quot;
 
 services:
   db:
     image: postgres:15
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: finance
+    restart: always
+    env_file:
+      - .env
     ports:
       - &quot;5432:5432&quot;
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 
   redis:
     image: redis:alpine
+    restart: always
     ports:
       - &quot;6379:6379&quot;
 
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.web
     depends_on:
       - db
       - redis
     ports:
       - &quot;8000:8000&quot;
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db/finance
+    env_file:
+      - .env
     volumes:
-      - ./app:/app
+      - .:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   worker:
-    build: .
-    command: celery -A tasks worker --loglevel=info
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
     depends_on:
       - redis
       - db
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    command: celery -A app.tasks worker --loglevel=info
+
+volumes:
+  pgdata:
 </code></pre>
 <h2 id="2-http">Подзадача 2: Вызов парсера через HTTP</h2>
 <p>Добавлен эндпоинт /parse в main.py:</p>
@@ -963,14 +959,6 @@ Redis используется как брокер и хранилище рез�
 <p><img alt="result_task_id" src="../img/result_task_id.png" /></p>
 <p>Записи в бд:</p>
 <p><img alt="pages" src="../img/pages.png" /></p>
-<h2 id="_4">Результаты</h2>
-<ul>
-<li>Успешно упаковано FastAPI-приложение в Docker</li>
-<li>Реализован HTTP-вызов парсера</li>
-<li>Реализован асинхронный вызов парсера через Celery</li>
-<li>Использована PostgreSQL как хранилище</li>
-<li>Протестирована связка всех компонентов с помощью Docker Compose</li>
-</ul>
 
 
 
